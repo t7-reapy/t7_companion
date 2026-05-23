@@ -1,6 +1,20 @@
-MIT License
+MIT License — Applies to t7_companion's own code only
 
-Copyright (c) 2026 T7 Modding Area
+This license covers:
+  - the CLI / MCP server / Claude Code plugin sources (e.g. src/)
+  - top-level build, packaging, and tooling scripts
+
+It does NOT cover:
+  - wiki/    — content is CC-BY-SA 4.0, see wiki/LICENSE.md
+  - kb.db    — aggregate of multiple licenses, see NOTICE.md
+  - LICENSES/ — third-party license texts and fair-use notices
+
+See NOTICE.md for the full polyglot-licensing breakdown.
+
+---
+
+Copyright (c) 2026 T7 Modding Area (https://github.com/t7-reapy),
+maintained by McReaper (https://github.com/McReaper)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

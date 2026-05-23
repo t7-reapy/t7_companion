@@ -1,0 +1,62 @@
+# Fair-use notice for bundled third-party content
+
+This notice covers content bundled inside `kb.db` from the following
+sources, none of which `t7_companion` claims to own or sublicense:
+
+- **`source_scripts`** — decompiled BO3 GSC/CSC engine scripts, mirrored
+  from the publicly-available [shiversoftdev/t7-source](https://github.com/shiversoftdev/t7-source)
+  GitHub repository (Treyarch IP).
+- **`docs-bo3`** — Treyarch's official BO3 mod tools reference
+  documentation (PDF/HTM), distributed openly by Treyarch as part of
+  the BO3 mod tools install (`docs_modtools/`).
+- **`video-youtube`** — per-segment transcripts (~30 sec chunks) of
+  publicly available YouTube tutorials, each linked via `?t=<seconds>`
+  deep-link URLs to the original video.
+
+## Posture
+
+These entries are included **as-is, with attribution**, under a
+fair-use mirror posture:
+
+- The content is already broadly distributed by its respective rights
+  holders (Treyarch via the free mod tools download; YouTube videos
+  publicly visible with creator-uploaded captions; shiversoftdev's
+  repository public on GitHub since 2021 without takedown).
+- Inclusion here is for **research, education, preservation, and
+  reference** purposes, with full attribution preserved on every entry.
+- We do not relicense, claim ownership of, or grant any rights to
+  these works that we do not possess.
+- Every `kb.db` row carries an `url` (or local-install path) and a
+  `source`-prefixed `doc_id` so users can verify provenance.
+
+## DMCA-ready posture
+
+If Treyarch / Activision, any YouTube creator, or any other
+rights-holder requests removal or change of inclusion:
+
+1. The affected rows in `kb.db` can be flipped to **pointer-only**
+   (URL/path + structured metadata only, no body text) in one commit
+   without affecting unrelated rows.
+2. Full removal is equally one commit — every row tracks its `source`.
+3. The `doc_id` format and search behavior is stable across these
+   changes; only the row's `body` column is affected.
+
+## Attribution lines on every entry
+
+When this kb.db is rendered by the consumer CLI / MCP / web frontend,
+entries from these sources should display:
+
+- `source_scripts` rows: *"Decompiled BO3 script from
+  [shiversoftdev/t7-source](https://github.com/shiversoftdev/t7-source)
+  @ commit `<sha>` — Treyarch IP, included under fair-use reference
+  posture."*
+- `docs-bo3` rows: *"From Treyarch's official BO3 mod tools reference
+  documentation (shipped openly with the mod tools)."*
+- `video-youtube` rows: *"Transcript segment from `<creator>` —
+  YouTube `<url>?t=<seconds>` — fair-use deep-link."*
+
+## Contact
+
+To request removal or repositioning of any content covered by this
+notice, open an issue against this repository or contact the maintainer
+[McReaper](https://github.com/McReaper) directly.
