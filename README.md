@@ -1,68 +1,50 @@
 # t7_companion
 
-:robot: Rich LLM-loadable collection of capabilities for **Black Ops 3
-modding** — a synthesized wiki, a portable search index (`kb.db`), and
-a consumer CLI / MCP server / Claude Code plugin. Try it, keep it
-:chains:.
+:robot: Rich LLM-loadable collection of capabilities for **Black Ops 3 modding** — a synthesized wiki, per-domain skills, a portable search index (`t7kb.db`), and a consumer CLI / MCP server / Claude Code plugin. Try it, keep it :chains:.
 
-> **Status**: scaffolding. The wiki content and `kb.db` are produced
-> upstream in [t7-reapy/t7_knowledge](https://github.com/t7-reapy/t7_knowledge)
-> (the maintainer's ingestion pipeline over the BO3 community corpus).
-> This repo will be the **public, shippable** artifact once synthesis
-> matures. Today it just holds the licensing scaffold + wiki domain
-> skeleton.
+> [!IMPORTANT]
+> **Status**: scaffolding. Today this repo holds the licensing structure; the wiki content, `t7kb.db`, and CLI/MCP code land progressively as the project matures.
 
 ## Repo layout
 
 ```
 t7_companion/
-  src/                     CLI / MCP / plugin code (MIT) — not yet started
-  wiki/                    Synthesized markdown wiki (CC-BY-SA 4.0)
-    ai/                    Per-domain page directories (placeholder skeleton)
-    asset-pipeline/
-    audio/
-    ...
-    LICENSE.md             ← wiki content license attestation (CC-BY-SA 4.0)
-  kb.db                    Shipped search index (built by upstream pipeline)
-  LICENSE                  ← MIT for the code in this repo
-  LICENSES/                ← bundled third-party license texts and notices
-    GPL-3.0.txt              gscode-api upstream license
-    CC-BY-SA-4.0.txt         wiki content license (full text)
-    fair-use-notice.md       Treyarch IP / YouTube transcript posture
-    modder-attribution.md    source_workspace per-modder attribution posture
-  NOTICE.md                ← polyglot-licensing top-level summary
-  README.md                ← this file
+├── src/                          CLI / MCP / plugin code (MIT) — not yet started
+├── wiki/                         Synthesized markdown wiki (CC-BY-SA 4.0)
+│   └── LICENSE.md                  wiki content license attestation
+├── skills/                       Per-domain LLM-loadable skill files (CC-BY-SA 4.0) — not yet started
+├── docs/                         Contributor reference
+│   ├── data-model.md               t7kb.db schema (what each row looks like)
+│   └── add-remove-knowledge.md     Adding / removing content (DMCA-ready)
+├── LICENSES/                     Bundled third-party license texts + notices
+│   ├── GPL-3.0.txt                 gscode-api upstream license
+│   ├── CC-BY-SA-4.0.txt            wiki / skills / docs content license
+│   ├── fair-use-notice.md          Treyarch / YouTube fair-use posture
+│   └── modder-attribution.md       source_workspace per-modder attribution posture
+├── LICENSE                       MIT for the code in this repo
+├── NOTICE.md                     polyglot-licensing top-level summary (canonical reference)
+└── README.md                     this file
 ```
 
-## Licensing at a glance
+> [!NOTE]
+> `t7kb.db` itself is **not committed** to this repo — it ships as a **GitHub Release asset** downloaded by the consumer at install / update time. The repo holds the licensing scaffold, the wiki sources, and the consumer code; the search index is built upstream and published per release.
 
-This repo bundles content from multiple sources, each under its own
-license or use posture (a *polyglot* repository). Full breakdown in
-[`NOTICE.md`](NOTICE.md), but the quick version:
+## Licensing — quick summary
 
-| Component | License |
-|---|---|
-| CLI / tooling code (`src/`) | **MIT** ([`LICENSE`](LICENSE)) |
-| Wiki pages (`wiki/`) | **CC-BY-SA 4.0** ([`wiki/LICENSE.md`](wiki/LICENSE.md)) |
-| `gscode-api` rows in `kb.db` | **GPLv3** ([`LICENSES/GPL-3.0.txt`](LICENSES/GPL-3.0.txt)) |
-| `source_scripts` / `docs-bo3` / `video-youtube` rows in `kb.db` | **fair-use mirror** ([`LICENSES/fair-use-notice.md`](LICENSES/fair-use-notice.md)) |
-| `source_workspace` rows in `kb.db` | **per-modder attribution** ([`LICENSES/modder-attribution.md`](LICENSES/modder-attribution.md)) |
-| `personal-notes` / `tools-dtzxporter` rows in `kb.db` | per-row license preserved in metadata |
+This is a *polyglot* repo. Each component has its own license:
 
-**DMCA-ready**: if any rights-holder objects to as-is inclusion of their
-content, the affected `kb.db` rows can be flipped to pointer-only
-(URL/path + metadata, no body) in one commit. See
-[`NOTICE.md`](NOTICE.md#how-to-use-this-db-legally) for the full posture.
+- **Code** (`src/`) → **MIT**
+- **Wiki / skills / docs prose** (`wiki/`, `skills/`, `docs/`) → **CC-BY-SA 4.0**
+- **`t7kb.db`** → an aggregate; each row keeps its own posture (GPLv3 / fair-use / per-modder / CC-BY / etc.)
 
-## Upstream
+For the full per-source breakdown, see **[`NOTICE.md`](NOTICE.md)** — that's the canonical reference. The `LICENSES/` directory holds the bundled third-party license texts and our fair-use notices.
 
-- **Knowledge pipeline**: [t7-reapy/t7_knowledge](https://github.com/t7-reapy/t7_knowledge)
-  — scraping, distillation, tagging, kb.db build.
-- **Architecture plan**: [`.docs/architecture/t7_companion.md`](https://github.com/t7-reapy/t7_knowledge/blob/main/.docs/architecture/t7_companion.md)
-  in t7_knowledge.
+> [!CAUTION]
+> **DMCA-ready**: if any rights-holder objects to as-is inclusion of their content, the affected `t7kb.db` rows can be flipped to **pointer-only** (URL/path + metadata, no body) without affecting unrelated rows. See [`docs/add-remove-knowledge.md`](docs/add-remove-knowledge.md) for the flow.
 
 ## Contributing / reporting issues
 
-Wiki edits, license-posture concerns, attribution corrections, and
-content-removal requests all welcome — open an issue or contact the
-maintainer [McReaper](https://github.com/McReaper) directly.
+A full `CONTRIBUTING.md` will land alongside the first wiki content. In the meantime: wiki edits, license-posture concerns, attribution corrections, and content-removal requests are all welcome — open an issue or contact the maintainer [McReaper](https://github.com/McReaper) directly.
+
+> [!TIP]
+> Want to fix a wiki page? Open a PR against `wiki/*.md` — pages are CC-BY-SA 4.0 and contributions are welcome under the same license. `t7kb.db` rows are built deterministically from the upstream source-set and aren't directly editable here (see [`docs/add-remove-knowledge.md`](docs/add-remove-knowledge.md) for how source-data changes happen).
