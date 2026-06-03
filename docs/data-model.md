@@ -74,7 +74,7 @@ The `license` field is a short SPDX-like string capturing the row's authoritativ
 | `GPL-3.0` | gscode-api entries | [`../LICENSES/GPL-3.0.txt`](../LICENSES/GPL-3.0.txt) |
 | `CC-BY-SA-4.0` | Synthesized wiki / skill / docs rows | [`../LICENSES/CC-BY-SA-4.0.txt`](../LICENSES/CC-BY-SA-4.0.txt) |
 | `CC-BY-4.0` | `personal-notes` rows (maintainer owns the IP and chose attribution-only redistribution) | maintainer-set |
-| `treyarch-fair-use` | `source_scripts`, `docs-bo3` rows | [`../LICENSES/fair-use-notice.md`](../LICENSES/fair-use-notice.md) |
+| `treyarch-fair-use` | `source_scripts`, `source_dump`, `docs-bo3` rows | [`../LICENSES/fair-use-notice.md`](../LICENSES/fair-use-notice.md) |
 | `youtube-fair-use` | `video-youtube` transcript-segment rows | [`../LICENSES/fair-use-notice.md`](../LICENSES/fair-use-notice.md) |
 | `modder-attribution` | `source_workspace` third-party modder rows | [`../LICENSES/modder-attribution.md`](../LICENSES/modder-attribution.md) |
 | `maintainer-owned` | `source_workspace` paths under `_reapy/` and top-level `KNOWLEDGE.md` / `README.md` | maintainer-set |

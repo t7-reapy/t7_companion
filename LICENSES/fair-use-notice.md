@@ -3,6 +3,7 @@
 This notice covers content bundled inside `t7kb.db` from the following sources, none of which `t7_companion` claims to own or sublicense:
 
 - **`source_scripts`** — decompiled BO3 GSC/CSC engine scripts, mirrored from the publicly-available [shiversoftdev/t7-source](https://github.com/shiversoftdev/t7-source) GitHub repository (Treyarch IP).
+- **`source_dump`** — a broad BO3 game-data dump (script bundles, vision sets, gamedata tables, Radiant key definitions), mirrored from the publicly-available [ate47/bo3-source](https://github.com/ate47/bo3-source) GitHub repository (Treyarch IP, dumped with Atian CoD Tools).
 - **`docs-bo3`** — Treyarch's official BO3 mod tools reference documentation (PDF/HTM), distributed openly by Treyarch as part of the BO3 mod tools install (`docs_modtools/`).
 - **`video-youtube`** — per-segment transcripts (~30 sec chunks) of publicly available YouTube tutorials, each linked via `?t=<seconds>` deep-link URLs to the original video.
 
@@ -24,6 +25,7 @@ If Treyarch / Activision, any YouTube creator, or any other rights-holder reques
 When `t7kb.db` is rendered by the consumer, entries from these sources should display:
 
 - `source_scripts` rows: *"Decompiled BO3 script from [shiversoftdev/t7-source](https://github.com/shiversoftdev/t7-source) @ commit `<sha>` — Treyarch IP, included under fair-use reference posture."*
+- `source_dump` rows: *"BO3 game data from [ate47/bo3-source](https://github.com/ate47/bo3-source) @ commit `<sha>` — Treyarch IP, included under fair-use reference posture."*
 - `docs-bo3` rows: *"From Treyarch's official BO3 mod tools reference documentation (shipped openly with the mod tools)."*
 - `video-youtube` rows: *"Transcript segment from `<creator>` — YouTube `<url>?t=<seconds>` — fair-use deep-link."*
 

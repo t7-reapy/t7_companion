@@ -12,6 +12,7 @@ This repository bundles content from multiple sources, each under its own licens
 | **Contributor docs** | `docs/` | **CC-BY-SA 4.0** — same license as `wiki/` |
 | **`gscode-api` rows** in `t7kb.db` | `source = 'gscode-api'` | **GPLv3** (upstream [Blakintosh/gscode](https://github.com/Blakintosh/gscode)) — see [`LICENSES/GPL-3.0.txt`](LICENSES/GPL-3.0.txt) |
 | **`source_scripts` rows** in `t7kb.db` | `source = 'source_scripts'` | **Treyarch IP, fair-use mirror** of public upstream [shiversoftdev/t7-source](https://github.com/shiversoftdev/t7-source) — see [`LICENSES/fair-use-notice.md`](LICENSES/fair-use-notice.md) |
+| **`source_dump` rows** in `t7kb.db` | `source = 'source_dump'` | **Treyarch IP, fair-use mirror** of public upstream [ate47/bo3-source](https://github.com/ate47/bo3-source) (BO3 game-data dump via Atian CoD Tools) — see [`LICENSES/fair-use-notice.md`](LICENSES/fair-use-notice.md) |
 | **`docs-bo3` rows** in `t7kb.db` | `source = 'docs-bo3'` | **Treyarch IP, shipped openly with the BO3 mod tools** — same fair-use posture, see [`LICENSES/fair-use-notice.md`](LICENSES/fair-use-notice.md) |
 | **`source_workspace` rows** in `t7kb.db` | `source = 'source_workspace'` | **Maintainer IP + per-modder attribution** under BO3 community convention — see [`LICENSES/modder-attribution.md`](LICENSES/modder-attribution.md) |
 | **`video-youtube` rows** in `t7kb.db` | `source = 'video-youtube'` | **Per-creator copyright, fair-use deep-linking** — see [`LICENSES/fair-use-notice.md`](LICENSES/fair-use-notice.md) |
