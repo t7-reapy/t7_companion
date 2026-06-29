@@ -31,8 +31,9 @@ type Hit struct {
 	DocID   string
 	Title   string
 	Source  string
-	Score   float64 // fused RRF score (higher = better)
-	Snippet string
+	Score       float64 // fused RRF score (higher = better)
+	Reliability float64
+	Snippet     string
 }
 
 // Doc is a full document body.
@@ -65,26 +66,94 @@ func Open(path string) (*Store, error) {
 // Close releases the handle.
 func (s *Store) Close() error { return s.db.Close() }
 
+// SearchHybrid fuses BM25 and vector rankings with RRF, applies reliability as
+// a soft tiebreak, and returns the top `limit` hits. qvec may be nil/empty (or
+// a different dimension than the db) — then it's BM25-only.
+func (s *Store) SearchHybrid(ctx context.Context, query string, qvec []float32, limit int) ([]Hit, error) {
+	bm25, err := s.bm25Rank(ctx, query, Pool)
+	if err != nil {
+		return nil, err
+	}
+	vec, err := s.vectorRank(ctx, qvec, Pool)
+	if err != nil {
+		return nil, err
+	}
+
+	fused, snippet := rrfFuse(bm25, vec)
+	if len(fused) == 0 {
+		return nil, nil
+	}
+
+	docIDs := make([]string, 0, len(fused))
+	for d := range fused {
+		docIDs = append(docIDs, d)
+	}
+	rel, title, source, err := s.meta(ctx, docIDs)
+	if err != nil {
+		return nil, err
+	}
+	sortByFusedScore(docIDs, fused, rel)
+	if limit > 0 && len(docIDs) > limit {
+		docIDs = docIDs[:limit]
+	}
+
+	hits := make([]Hit, len(docIDs))
+	for i, d := range docIDs {
+		hits[i] = Hit{DocID: d, Title: title[d], Source: source[d], Score: fused[d], Reliability: rel[d], Snippet: snippet[d]}
+	}
+	return hits, nil
+}
+
+// rankItem is one retriever's ranked candidate (already in rank order).
+type rankItem struct {
+	docID   string
+	snippet string
+}
+
+// rrfFuse combines ranked lists by Reciprocal Rank Fusion and keeps the first
+// non-empty snippet seen per doc.
+func rrfFuse(rankings ...[]rankItem) (fused map[string]float64, snippet map[string]string) {
+	fused = make(map[string]float64)
+	snippet = make(map[string]string)
+	for _, items := range rankings {
+		for rank, it := range items {
+			fused[it.docID] += 1.0 / float64(RRFK+rank+1)
+			if snippet[it.docID] == "" && it.snippet != "" {
+				snippet[it.docID] = it.snippet
+			}
+		}
+	}
+	return fused, snippet
+}
+
+// sortByFusedScore orders docIDs by fused score, with reliability as tiebreak.
+func sortByFusedScore(docIDs []string, fused, rel map[string]float64) {
+	sort.Slice(docIDs, func(i, j int) bool {
+		di, dj := docIDs[i], docIDs[j]
+		switch {
+		case fused[di] != fused[dj]:
+			return fused[di] > fused[dj]
+		case rel[di] != rel[dj]:
+			return rel[di] > rel[dj]
+		default:
+			return di < dj
+		}
+	})
+}
+
 var ftsToken = regexp.MustCompile(`[\p{L}\p{N}_]+`)
 
-// ftsQuery turns free text into a safe FTS5 MATCH expression: each word
-// becomes a quoted term, joined implicitly (AND). Empty if no usable tokens.
+// ftsQuery turns free text into a safe FTS5 MATCH expression: each word becomes
+// a quoted term, joined implicitly (AND). Empty if there are no usable tokens.
 func ftsQuery(q string) string {
 	toks := ftsToken.FindAllString(q, -1)
 	if len(toks) == 0 {
 		return ""
 	}
-	quoted := make([]string, len(toks))
 	for i, t := range toks {
-		quoted[i] = `"` + t + `"`
+		toks[i] = `"` + t + `"`
 	}
-	return strings.Join(quoted, " ")
-}
-
-// rankItem is one retriever's ranked candidate.
-type rankItem struct {
-	docID   string
-	snippet string
+	return strings.Join(toks, " ")
 }
 
 // bm25Rank returns up to limit doc_ids ranked by FTS5 BM25, with a snippet.
@@ -105,6 +174,7 @@ func (s *Store) bm25Rank(ctx context.Context, query string, limit int) ([]rankIt
 		return nil, fmt.Errorf("bm25 search: %w", err)
 	}
 	defer rows.Close()
+
 	var out []rankItem
 	for rows.Next() {
 		var it rankItem
@@ -118,17 +188,15 @@ func (s *Store) bm25Rank(ctx context.Context, query string, limit int) ([]rankIt
 	return out, rows.Err()
 }
 
-func decodeVec(b []byte) []float32 {
-	n := len(b) / 4
-	v := make([]float32, n)
-	for i := range v {
-		v[i] = math.Float32frombits(binary.LittleEndian.Uint32(b[i*4:]))
-	}
-	return v
+// scoredDoc is a doc with its best vector score and that chunk's snippet.
+type scoredDoc struct {
+	docID   string
+	score   float64
+	snippet string
 }
 
-// vectorRank streams the embeddings table, scoring each chunk by dot product
-// with qvec (cosine, since both are L2-normalized), keeping the best chunk per
+// vectorRank streams the embeddings table, scoring each chunk by cosine (dot,
+// since vectors are L2-normalized) against qvec and keeping the best chunk per
 // doc. Chunks whose dimension differs from qvec are skipped — so the tool
 // degrades to BM25-only against a db embedded with a different model.
 func (s *Store) vectorRank(ctx context.Context, qvec []float32, limit int) ([]rankItem, error) {
@@ -137,16 +205,11 @@ func (s *Store) vectorRank(ctx context.Context, qvec []float32, limit int) ([]ra
 	}
 	rows, err := s.db.QueryContext(ctx, `SELECT doc_id, chunk_text, embedding FROM embeddings`)
 	if err != nil {
-		// No embeddings table (or unreadable) → vector disabled, not fatal.
-		return nil, nil
+		return nil, nil // no embeddings table → vector disabled, not fatal
 	}
 	defer rows.Close()
 
-	type best struct {
-		score   float64
-		snippet string
-	}
-	bestByDoc := map[string]best{}
+	best := make(map[string]scoredDoc)
 	for rows.Next() {
 		var docID string
 		var chunkText sql.NullString
@@ -156,38 +219,51 @@ func (s *Store) vectorRank(ctx context.Context, qvec []float32, limit int) ([]ra
 		}
 		v := decodeVec(blob)
 		if len(v) != len(qvec) {
-			continue // dimension mismatch → skip
+			continue
 		}
-		var dot float64
-		for i := range qvec {
-			dot += float64(qvec[i]) * float64(v[i])
-		}
-		if cur, ok := bestByDoc[docID]; !ok || dot > cur.score {
-			bestByDoc[docID] = best{score: dot, snippet: snippetOf(chunkText.String)}
+		score := dot(qvec, v)
+		if cur, ok := best[docID]; !ok || score > cur.score {
+			best[docID] = scoredDoc{docID, score, snippetOf(chunkText.String)}
 		}
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+	return topRankItems(best, limit), nil
+}
 
-	ranked := make([]rankItem, 0, len(bestByDoc))
-	type ds struct {
-		doc string
-		sc  float64
-		sn  string
+// topRankItems sorts scored docs by score (descending), truncates to limit, and
+// projects to rankItems.
+func topRankItems(byDoc map[string]scoredDoc, limit int) []rankItem {
+	docs := make([]scoredDoc, 0, len(byDoc))
+	for _, d := range byDoc {
+		docs = append(docs, d)
 	}
-	all := make([]ds, 0, len(bestByDoc))
-	for d, b := range bestByDoc {
-		all = append(all, ds{d, b.score, b.snippet})
+	sort.Slice(docs, func(i, j int) bool { return docs[i].score > docs[j].score })
+	if limit > 0 && len(docs) > limit {
+		docs = docs[:limit]
 	}
-	sort.Slice(all, func(i, j int) bool { return all[i].sc > all[j].sc })
-	if limit > 0 && len(all) > limit {
-		all = all[:limit]
+	items := make([]rankItem, len(docs))
+	for i, d := range docs {
+		items[i] = rankItem{docID: d.docID, snippet: d.snippet}
 	}
-	for _, a := range all {
-		ranked = append(ranked, rankItem{docID: a.doc, snippet: a.sn})
+	return items
+}
+
+func dot(a, b []float32) float64 {
+	var sum float64
+	for i := range a {
+		sum += float64(a[i]) * float64(b[i])
 	}
-	return ranked, nil
+	return sum
+}
+
+func decodeVec(b []byte) []float32 {
+	v := make([]float32, len(b)/4)
+	for i := range v {
+		v[i] = math.Float32frombits(binary.LittleEndian.Uint32(b[i*4:]))
+	}
+	return v
 }
 
 func snippetOf(s string) string {
@@ -198,75 +274,13 @@ func snippetOf(s string) string {
 	return s
 }
 
-// SearchHybrid fuses BM25 and vector rankings with RRF, applies reliability as
-// a soft tiebreak, and returns the top `limit` hits. qvec may be nil/empty (or
-// a different dimension than the db) — then it's BM25-only.
-func (s *Store) SearchHybrid(ctx context.Context, query string, qvec []float32, limit int) ([]Hit, error) {
-	bm25, err := s.bm25Rank(ctx, query, Pool)
-	if err != nil {
-		return nil, err
-	}
-	vec, err := s.vectorRank(ctx, qvec, Pool)
-	if err != nil {
-		return nil, err
-	}
-
-	// RRF over both rankings; remember the first snippet seen per doc.
-	fused := map[string]float64{}
-	snip := map[string]string{}
-	add := func(items []rankItem) {
-		for rank, it := range items {
-			fused[it.docID] += 1.0 / float64(RRFK+rank+1)
-			if snip[it.docID] == "" && it.snippet != "" {
-				snip[it.docID] = it.snippet
-			}
-		}
-	}
-	add(bm25)
-	add(vec)
-	if len(fused) == 0 {
-		return nil, nil
-	}
-
-	docIDs := make([]string, 0, len(fused))
-	for d := range fused {
-		docIDs = append(docIDs, d)
-	}
-	rel, title, source, err := s.meta(ctx, docIDs)
-	if err != nil {
-		return nil, err
-	}
-	sort.Slice(docIDs, func(i, j int) bool {
-		di, dj := docIDs[i], docIDs[j]
-		if fused[di] != fused[dj] {
-			return fused[di] > fused[dj]
-		}
-		if rel[di] != rel[dj] {
-			return rel[di] > rel[dj] // reliability tiebreak
-		}
-		return di < dj
-	})
-	if limit > 0 && len(docIDs) > limit {
-		docIDs = docIDs[:limit]
-	}
-
-	hits := make([]Hit, 0, len(docIDs))
-	for _, d := range docIDs {
-		hits = append(hits, Hit{
-			DocID: d, Title: title[d], Source: source[d],
-			Score: fused[d], Snippet: snip[d],
-		})
-	}
-	return hits, nil
-}
-
 // meta fetches title/source/reliability for a set of doc_ids.
 func (s *Store) meta(ctx context.Context, docIDs []string) (rel map[string]float64, title, source map[string]string, err error) {
-	rel = map[string]float64{}
-	title = map[string]string{}
-	source = map[string]string{}
+	rel = make(map[string]float64)
+	title = make(map[string]string)
+	source = make(map[string]string)
 	if len(docIDs) == 0 {
-		return
+		return rel, title, source, nil
 	}
 	ph := strings.TrimSuffix(strings.Repeat("?,", len(docIDs)), ",")
 	args := make([]any, len(docIDs))
