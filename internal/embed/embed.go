@@ -4,6 +4,8 @@ package embed
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	sentex "github.com/edgetools/go-sentex"
 )
@@ -13,8 +15,15 @@ type Embedder struct {
 	model *sentex.Model
 }
 
-// New loads the model (downloads ~87 MB on first use, cached thereafter).
+// New loads the model. By default it looks in a `models/` directory beside the
+// binary (where the release bundles it, so it loads offline); set HF_HOME to
+// override. With neither present, go-sentex downloads ~87 MB on first use.
 func New() (*Embedder, error) {
+	if os.Getenv("HF_HOME") == "" {
+		if exe, err := os.Executable(); err == nil {
+			_ = os.Setenv("HF_HOME", filepath.Join(filepath.Dir(exe), "models"))
+		}
+	}
 	m, err := sentex.LoadModel()
 	if err != nil {
 		return nil, fmt.Errorf("load embedding model: %w", err)
