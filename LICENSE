@@ -1,15 +1,7 @@
-MIT License — Applies to t7_companion's own code only
+MIT License — applies to t7_companion's own code (the `t7kb` tool).
 
-This license covers:
-- the CLI / MCP server / Claude Code plugin sources (e.g. `src/`)
-- top-level build, packaging, and tooling scripts
-
-It does NOT cover:
-- `wiki/` — content is CC-BY-SA 4.0, see `wiki/LICENSE.md`
-- `t7kb.db` — aggregate of multiple licenses, see `NOTICE.md`
-- `LICENSES/` — third-party license texts and fair-use notices
-
-See `NOTICE.md` for the full polyglot-licensing breakdown.
+It does NOT cover `t7kb.db`, which bundles knowledge from the BO3 modding
+community under per-row attribution; see `NOTICE.md`.
 
 ---
 
