@@ -26,8 +26,10 @@ func newRootCmd() *cobra.Command {
 		Use:   "t7kb",
 		Short: "Hybrid search over a local Black Ops 3 modding knowledge base",
 		Long: "t7kb queries a local t7kb.db with hybrid retrieval (BM25 + vector).\n\n" +
-			"It is built to be driven by an AI agent over MCP (`t7kb mcp`), with a\n" +
-			"small CLI for direct use.",
+			"It is built to be driven by an AI agent over MCP (`t7kb mcp`). Run it with\n" +
+			"no arguments for an interactive browse session, or use `search` / `get`.",
+		Args:          cobra.ArbitraryArgs,
+		RunE:          runBrowse,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
