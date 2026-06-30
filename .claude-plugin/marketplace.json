@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "t7-reapy",
+  "owner": { "name": "McReaper", "url": "https://github.com/McReaper" },
+  "description": "Black Ops 3 modding tools by the T7 Modding Area.",
+  "plugins": [
+    {
+      "name": "t7kb",
+      "source": "./plugin",
+      "description": "Local Black Ops 3 modding knowledge base — hybrid (keyword + semantic) search over the BO3 modding community, served to the agent over MCP. Run /t7kb:setup once to install."
+    }
+  ]
+}
