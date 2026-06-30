@@ -1,8 +1,6 @@
-# Builds the pure-Go t7kb binary for Windows + Linux, bundles the embedding
-# model for offline use, and publishes a GitHub Release on a v* tag.
-#
-# t7kb.db is NOT built here (it's large and built upstream in t7_knowledge) —
-# the maintainer attaches it to the release as a separate asset.
+# Cuts a GitHub Release via GoReleaser when a v* tag is pushed: builds the
+# pure-Go binaries (Windows + Linux), bundles the embedding model, and generates
+# the changelog from conventional commits. See .goreleaser.yaml.
 name: release
 
 on:
@@ -13,47 +11,20 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  goreleaser:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so the changelog can diff tags
 
       - uses: actions/setup-go@v5
         with:
           go-version: stable
 
-      - name: Build binaries (pure Go, CGO disabled)
-        env:
-          CGO_ENABLED: "0"
-        run: |
-          GOOS=linux   GOARCH=amd64 go build -trimpath -o dist/linux/t7kb       ./cmd/t7kb
-          GOOS=windows GOARCH=amd64 go build -trimpath -o dist/windows/t7kb.exe ./cmd/t7kb
-
-      - name: Fetch embedding model (shared offline bundle)
-        run: |
-          mkdir -p models
-          HF_HOME="$PWD/models" dist/linux/t7kb embed warmup > /dev/null
-
-      - name: Assemble per-platform archives
-        run: |
-          for os in linux windows; do
-            cp -r models dist/$os/
-            cp README.md NOTICE.md LICENSE dist/$os/
-          done
-          (cd dist/linux   && tar -czf "$GITHUB_WORKSPACE/t7kb_linux_amd64.tar.gz" .)
-          (cd dist/windows && zip -qr  "$GITHUB_WORKSPACE/t7kb_windows_amd64.zip"  .)
-
-      - name: Publish release
-        uses: softprops/action-gh-release@v2
+      - uses: goreleaser/goreleaser-action@v6
         with:
-          files: |
-            t7kb_linux_amd64.tar.gz
-            t7kb_windows_amd64.zip
-          body: |
-            **Install:** download the archive for your OS **and** `t7kb.db` (a separate
-            asset on this release — it's large), extract the archive at your **Black
-            Ops III root**, and drop `t7kb.db` in the same folder. Then point your
-            agent at the MCP server: `t7kb mcp`.
-
-            Each archive carries the `t7kb` binary, the embedding model (`models/`),
-            and the docs. Everything runs locally and offline.
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

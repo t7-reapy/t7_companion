@@ -13,8 +13,6 @@ import (
 	"github.com/t7-reapy/t7_companion/internal/store"
 )
 
-const mcpVersion = "0.1.0"
-
 func newMCPCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "mcp",
@@ -40,7 +38,7 @@ func runMCP() error {
 		return err
 	}
 
-	s := server.NewMCPServer("t7kb", mcpVersion, server.WithToolCapabilities(false))
+	s := server.NewMCPServer("t7kb", Version(), server.WithToolCapabilities(false))
 	s.AddTool(searchToolDef(), searchToolHandler(st, emb))
 	s.AddTool(getToolDef(), getToolHandler(st))
 	return server.ServeStdio(s)

@@ -13,6 +13,12 @@ import (
 
 var dbFlag string
 
+// version is set at build time via -ldflags (GoReleaser); "dev" for local builds.
+var version = "dev"
+
+// Version returns the build version, used as the MCP server version too.
+func Version() string { return version }
+
 // Execute runs the root command, exiting non-zero on error.
 func Execute() {
 	if err := newRootCmd().Execute(); err != nil {
@@ -28,6 +34,7 @@ func newRootCmd() *cobra.Command {
 		Long: "t7kb queries a local t7kb.db with hybrid retrieval (BM25 + vector).\n\n" +
 			"It is built to be driven by an AI agent over MCP (`t7kb mcp`). Run it with\n" +
 			"no arguments for an interactive browse session, or use `search` / `get`.",
+		Version:       version,
 		Args:          cobra.ArbitraryArgs,
 		RunE:          runBrowse,
 		SilenceUsage:  true,
