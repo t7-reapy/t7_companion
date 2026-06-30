@@ -5,6 +5,7 @@
 
 # Shipped via GitHub Releases, never committed
 *.db
+*.db.zip
 *.db-journal
 *.db-wal
 /models/

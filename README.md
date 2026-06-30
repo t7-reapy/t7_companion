@@ -10,13 +10,16 @@ small CLI for direct use. Everything runs locally and offline.
 
 ## Install
 
-1. From the latest release, download the archive for your OS **and** `t7kb.db`.
-2. Extract the archive **at your Black Ops III root**, and drop `t7kb.db` in the
-   same folder.
-3. Point your agent at the MCP server: run `t7kb mcp` (stdio).
+1. From the latest release, download your OS archive (`t7kb_windows_amd64.zip` or
+   `t7kb_linux_amd64.tar.gz`) **and** `t7kb.db.zip`.
+2. Extract the OS archive **at your Black Ops III root**.
+3. Drop `t7kb.db.zip` into the same folder, next to the binary — it is unpacked
+   automatically on first run (no manual decompress).
+4. Point your agent at the MCP server: run `t7kb mcp` (stdio).
 
-The archive carries the binary, the embedding model, and the docs; `t7kb.db` ships
-as a separate asset (it's large). Everything then runs locally and offline.
+The OS archive carries the binary, the embedding model, and the docs; the database
+ships as a separate `t7kb.db.zip` (it's large). Everything then runs locally and
+offline.
 
 ## CLI
 

@@ -46,7 +46,9 @@ func newRootCmd() *cobra.Command {
 	return root
 }
 
-// resolveDB picks the t7kb.db path: --db > $T7KB_DB > beside-binary > cwd.
+// resolveDB picks where t7kb.db should live: --db > $T7KB_DB > beside the
+// binary > cwd. It returns the intended path whether or not the file exists yet
+// (ensureDB unpacks a sibling t7kb.db.zip there on first run).
 func resolveDB() string {
 	if dbFlag != "" {
 		return dbFlag
@@ -55,14 +57,15 @@ func resolveDB() string {
 		return env
 	}
 	if exe, err := os.Executable(); err == nil {
-		beside := filepath.Join(filepath.Dir(exe), "t7kb.db")
-		if _, err := os.Stat(beside); err == nil {
-			return beside
-		}
+		return filepath.Join(filepath.Dir(exe), "t7kb.db")
 	}
 	return "t7kb.db"
 }
 
 func openStore() (*store.Store, error) {
-	return store.Open(resolveDB())
+	path := resolveDB()
+	if err := ensureDB(path); err != nil {
+		return nil, err
+	}
+	return store.Open(path)
 }
