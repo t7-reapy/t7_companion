@@ -1,0 +1,66 @@
+# GoReleaser — builds the pure-Go t7kb binary for Windows + Linux, bundles the
+# embedding model for offline use, and cuts a GitHub Release with a changelog
+# generated from conventional commits.
+#
+# The version comes from the pushed git tag (e.g. v0.1.0). t7kb.db is NOT built
+# here (large, built upstream in t7_knowledge) — attach it to the release as a
+# separate asset.
+#
+# Validate locally:  goreleaser check   ·   dry-run:  goreleaser release --snapshot --clean
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    # Populate ./models with the embedding model once, so both archives can
+    # bundle it for offline use (the binary loads it from beside itself).
+    - sh -c 'HF_HOME="$(pwd)/models" go run ./cmd/t7kb embed warmup'
+
+builds:
+  - id: t7kb
+    main: ./cmd/t7kb
+    binary: t7kb
+    env:
+      - CGO_ENABLED=0 # pure Go — no C toolchain, clean cross-compile
+    goos: [linux, windows]
+    goarch: [amd64]
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/t7-reapy/t7_companion/internal/cli.version={{ .Version }}
+
+archives:
+  - id: t7kb
+    name_template: "t7kb_{{ .Os }}_{{ .Arch }}"
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    files:
+      - README.md
+      - NOTICE.md
+      - LICENSE
+      - models/**/* # the bundled embedding model (offline)
+
+# Hand-curated notes (header + footer below) instead of an auto-generated commit
+# list — keeps raw hashes and author emails out of the public release.
+changelog:
+  disable: true
+
+release:
+  # owner/repo are auto-detected from the git remote.
+  name_template: "t7kb {{ .Tag }}"
+  header: |
+    Agent-first hybrid search (keyword + semantic) over a local Black Ops 3
+    modding knowledge base — one pure-Go binary exposing an MCP server (for AI
+    agents) and a small CLI, querying a bundled SQLite index. Runs fully offline.
+  footer: |
+    ## Install
+
+    1. Download your OS archive (`t7kb_windows_amd64.zip` or `t7kb_linux_amd64.tar.gz`) **and** `t7kb.db.zip`.
+    2. Extract the OS archive at your **Black Ops III root**.
+    3. Drop `t7kb.db.zip` into the same folder, next to the binary — it is unpacked automatically on first run.
+    4. Point your agent at the MCP server: run `t7kb mcp`.
+
+    Everything runs locally and offline.
