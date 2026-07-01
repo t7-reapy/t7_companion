@@ -1,0 +1,46 @@
+---
+name: bo3-zombies-ai
+description: How to work with zombies/character AI in Black Ops 3 — behavior trees, spawners, custom traversals, navmesh, and custom zombie variants. This is in-game AI (zombie/character behavior, pathing, spawning) — not LLM/agent AI, don't conflate the two. Use for custom zombie types/variants, AI not behaving/pathing/attacking correctly, or spawner logic.
+---
+
+# Zombie / character AI in Black Ops 3
+
+Custom AI behavior is driven by four file types working together, not one — look up exact function names/KVPs in **t7kb** (`search` then `get`), but the file relationship below is the part that trips people up.
+
+## The four files that drive AI behavior
+
+`.ai_bt` (behavior tree), `.ai_asm` (anim state machine), `.ai_am` (anim table), `.ai_ast` (**AnimState Tree** — a blackboard-attribute + selector table that resolves an `animation_selector` to an `_animation_alias`, not just "an anim state") — under `share/raw/behavior`, `animstatemachines`, `animtables`, `animstates` respectively. ASM vs AST is the single most important distinction to keep straight here: they tell the AI *what to do* (bt) and *how to animate it* (asm/am/ast). Adding a custom zombie variant or a custom traversal usually means touching more than one of these — a fix that only edits the behavior tree but not the matching anim table (or vice versa) is a common half-fix.
+
+## Behavior tree gotcha: your usermap copy can be stale, not the one from `share/raw`
+
+If zombies spawn but just stand there replaying an idle animation ("the zombie dance"), the map GSC is usually missing a community-pack `#using` for its behavior module plus that module's scriptparsetree in the `.zone` — add both. Separately: when debugging a broken behavior (e.g. a ported special zombie not reacting to a weapon), don't assume the `.ai_bt`/`.ai_asm`/`.ai_am`/`.ai_ast` sitting in your usermap folder is correct — pull the canonical one from `share/raw` first; a stale usermap copy missing the checks for your case (e.g. a specific wonder weapon) is a frequent cause, and the fix is adding the missing checks to *all four* files, not just one.
+
+## Custom traversals need a behavior tree entry — the animation existing isn't enough
+
+A traversal animation being visible in a prefab does **not** mean AI will use it: the traversal must be added to the behavior tree, or the AI won't take it (this trips people up for non-standard AI like dogs, not just zombies). Procedural traversals (the AI measures distance and jumps to match) are a distinct mechanism from fixed custom traversals and need their own behavior tree setup. Traversal names follow a literal convention in the anim tables, e.g. `JUMP_UP_36_DOWN_52` — match the name to hook up the right entry.
+
+## Spawning zombies: it's mostly Radiant KVPs, not a GSC call
+
+The actual spawn recipe is entity setup, not scripting: a spawner entity `actor/spawner_zm_factory_zombie` with `script_noteworthy = zombie_spawner`, `count = 9999`, `coop_count = {9999,0,0,0}`, and `script_forcespawn = 1`. **Risers** are a separate entity — a `script/struct` with `targetname = <zone>_spawners`, `script_noteworthy = riser_location`, `script_string = find_flesh`. Fallers/crawlers and special types (margwa/nova/quad) have their own KVPs and devraw prefabs — check the prefab itself or t7kb if a type-specific KVP isn't in the usual list. On the script side, `zombie_utility::spawn_zombie(spawner, ...)` is the runtime call that actually spawns against a placed spawner; to run custom logic on every spawn **without forking anything**, hook it (`spawner::add_archetype_spawn_function("zombie", &my_spawn_function)`) — same hook-first philosophy as `bo3-scripting`.
+
+**Fresh maps ship with `dog_rounds_allowed` on but no dog-spawner prefab** — an easy-to-miss gotcha that produces an infinite dog round with nothing spawning. Fix by adding a `dog_spawner.map` (from The Giant) stamp plus a `<zone>_spawners`-named struct, or just disable dog rounds outright with `level.dog_rounds_allowed = false`.
+
+**Zombies with no valid target just stand still** — a solo player downed, or anyone under Zombie Blood, leaves nothing for zombies to path toward. Fix with lightweight `script_noteworthy = zombie_poi` structs for a simple case, or the full `zm_giant_cleanup_mgr` hook (`enemy_location_override`/`no_target_override`) for `dog_location`-based relocation in a more involved one.
+
+## Tuning zombie/player stats
+
+Zombie health is **script-set, not a dvar**: `zombie_utility::set_zombie_var(zvar, value, is_float, column)` with vars `zombie_health_start` / `zombie_health_increase` / `zombie_health_increase_multiplier` (there's no single `level.zombie_health` to read or set directly). On the player side, the same function with `"player_base_health"` changes starting health. Power-up drop rates are dvar-controlled — search t7kb for the specific dvar name before assuming a hardcoded value.
+
+## Navmesh & pathing
+
+The navmesh is **auto-generated by the launcher at compile time** — there's no manual "nav volume" texture or brush to paint by hand, and looking for one by that literal name is a dead end. What you *do* place is a `nav_volume` brush entity; if the compiler warns `NavVolume generation is skipped... no nav_volume brush in the level`, add one (or pass `-navvolume`). Even in a single open, fully-connected area, add at least one pathnode — an area with no barriers can still confuse generation without one. To block zombies from a specific spot, prefer `DisconnectPaths` over deleting the navmesh outright — deleting can leave a disconnected mesh fragment zombies can't route around, while disconnecting the specific area keeps the rest usable.
+
+## Custom zombie variants: mostly APE, not scripting
+
+Adding a genuinely new zombie **type** is primarily an APE data-authoring task, not a GSC one: derive an `archetype_zm_factory_zombie` → a Variant → a Spawner, then build a Character with the required parts (`_body`, `_head`, and gib pieces `_behead`/`_upclean`/`_lowclean`/`_r|larmoff`/`_r|l|blegoff`), place the spawner in Radiant with the KVPs above, and register it in the zone (`aitype,archetype_zm_<name>_zombie`). Scripting (custom spawn functions, behavior-tree edits) is for *behavior* that diverges from stock — most "add a new zombie skin/variant" requests don't need any.
+
+Rigging the underlying model (extracting the factory armature, binding joints, head/jaw split) is a separate asset-pipeline task — see **bo3-assets** for that; this section is about wiring an already-rigged model into the AI/spawner system.
+
+## Don't invent
+
+The `.ai_bt`/`.ai_asm`/`.ai_am`/`.ai_ast` schema and KVP names here are shipped, Treyarch-authored tokens — confirm exact function/KVP names against the raw mod-tools install before stating them as fact. If neither t7kb nor the raw install supports a specific behavior-tree entry or spawner KVP, don't assert it exists.

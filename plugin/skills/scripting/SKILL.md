@@ -1,6 +1,6 @@
 ---
 name: bo3-scripting
-description: How to write good GSC/CSC for Black Ops 3 — header/usings, the standard library, extending stock behavior (hooks vs override), threading/scope, clientfields, init-vs-main, usermap-vs-map entry files, and code-style conventions. Use for any BO3 server- or client-script task (gameplay logic, custom systems, perks/weapons, HUD wiring) and for how to structure/format a script.
+description: How to write good GSC/CSC for Black Ops 3 — header/usings, the standard library, extending stock behavior (hooks vs override), threading/scope, clientfields, init-vs-main, usermap-vs-map entry files, and code-style conventions. Use for any BO3 server- or client-script task (gameplay logic, custom systems, perks/weapons) and for how to structure/format a script. The clientfield bridge to LUI/Lua HUD work is covered here on the GSC/CSC side; for the Lua/LUI authoring side itself, see bo3-hud-lui.
 ---
 
 # Writing GSC/CSC for Black Ops 3
@@ -91,3 +91,7 @@ GSC is the **server** (gameplay, AI, spawning, score); CSC is the **client** (HU
 - **System state in a `class` instance** on `level` (`level.my_system = new my_system();`), not scattered `level.foo_*` fields.
 - **`flag::init("name")`** before you wait on or set a flag.
 - **Split a feature into focused sub-files** (e.g. logic / audio / fx) + a `_shared.gsc`/`.gsh` for cross-file state and constants, rather than one giant script.
+
+## Don't invent
+
+Stdlib function names, KVPs, and stock system entry points are shipped tokens — confirm exact names against the raw mod-tools install before stating them as fact. If neither t7kb nor the raw install supports a specific function or KVP, don't assert it exists.
