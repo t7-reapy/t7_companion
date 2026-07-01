@@ -33,13 +33,15 @@ Only pass the force flag below if the user explicitly wants to reinstall/update.
 
 ## 2. Register the MCP server
 
-Use the **absolute path** to the installed binary from step 1 (include `.exe` on Windows — a path without the extension fails to spawn on Windows):
+Use the **absolute path** to the installed binary from step 1 (include `.exe` on Windows — a path without the extension fails to spawn on Windows). **Always double-quote the path**, even if it looks safe unquoted:
 
 ```bash
-claude mcp add t7kb -- /absolute/path/to/t7kb mcp
+claude mcp add t7kb -- "/absolute/path/to/t7kb" mcp
 ```
 
 Example paths: `~/.t7kb/t7kb` (Linux/macOS, expand `~` to the real home) or `C:\Users\<you>\AppData\Local\t7kb\t7kb.exe` (Windows).
+
+On Windows this command still runs through a POSIX-style shell (the Bash tool is git-bash), which treats an unquoted backslash as an escape character and silently drops it before a non-special letter — `C:\Users\victo\AppData\Local\t7kb\t7kb.exe` becomes `C:UsersvictoAppDataLocalt7kbt7kb.exe`, a path that can't spawn. Double-quoting the argument (as above) prevents this. If the MCP server was registered before this fix, or ever fails to connect, run `claude mcp list` (or inspect the registered command) and re-add it with the quoted path if the backslashes are missing.
 
 ## 3. Offer the workspace primer
 

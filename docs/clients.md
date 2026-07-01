@@ -4,8 +4,9 @@ After installing (see the [README](../README.md)), every client runs the same th
 
 **Claude Code** — the plugin does this for you (`/t7kb:setup`); to wire it manually:
 ```bash
-claude mcp add t7kb -- /path/to/t7kb mcp
+claude mcp add t7kb -- "/path/to/t7kb" mcp
 ```
+Always quote the path, even on one line — on Windows this command runs through a POSIX-style shell, which silently drops backslashes before non-special letters in an unquoted argument (`C:\Users\you\t7kb.exe` becomes `C:Usersyout7kb.exe`), registering a broken command. If `t7kb` ever shows as failed/disconnected, check the registered command (`claude mcp list`) for missing backslashes and re-add it quoted.
 
 **Codex** — `~/.codex/config.toml`:
 ```toml
