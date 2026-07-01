@@ -1,0 +1,29 @@
+#!/bin/sh
+# Guards against pushing a v* tag whose plugin.json version doesn't match.
+# Enable with: git config core.hooksPath .githooks
+# This is a local convenience check; .github/workflows/release.yml is the real gate.
+
+zero="0000000000000000000000000000000000000000"
+
+if ! command -v jq >/dev/null 2>&1; then
+  echo "pre-push: jq not found, skipping plugin.json/tag version check" >&2
+  exit 0
+fi
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  case "$local_ref" in
+    refs/tags/v*)
+      [ "$local_sha" = "$zero" ] && continue # tag deletion, nothing to check
+
+      tag="${local_ref#refs/tags/v}"
+      manifest="$(git show "$local_sha:plugin/.claude-plugin/plugin.json" | jq -r .version)"
+      if [ "$tag" != "$manifest" ]; then
+        echo "pre-push: plugin.json version ($manifest) does not match tag ($tag) at $local_ref." >&2
+        echo "pre-push: bump plugin/.claude-plugin/plugin.json's version to $tag before pushing this tag." >&2
+        exit 1
+      fi
+      ;;
+  esac
+done
+
+exit 0

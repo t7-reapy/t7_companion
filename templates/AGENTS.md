@@ -30,6 +30,14 @@ Durable conventions that hold regardless of the specific task — verify the spe
 
 The corpus is a starting point, not the final authority. For anything Treyarch **shipped** — exact function names, entity KVPs, asset fields, error strings, file paths — confirm against the **raw mod-tools install** (the game's own files under your BO3 root) before stating it as fact. Decompiled and community sources can be paraphrased or subtly wrong; the shipped files are ground truth. Drop any claim you can't ground in either the corpus or the raw install.
 
+### When the raw install isn't available
+
+The raw mod-tools install is the preferred ground truth, but it may be absent (not installed, on another machine, or a headless run). Do not silently fall back to low-reliability sources:
+
+- **Detect and disclose.** If you cannot locate the install, say so in your answer, and mark any shipped-token claim (function name, KVP, asset field, error string, path) as corroborated by community sources only — not verified against shipped files.
+- **Last-resort web supplement.** When the kb is thin and the install is unavailable, a targeted web search may fill gaps. Rank it strictly below the kb and the install, never as ground truth. Prefer higher-reliability sources (e.g. UGX, resolved/accepted threads) over random posts, keep the "may be paraphrased or subtly wrong" caution, and state in the answer what was verified versus merely corroborated.
+- **Ordering.** Always: kb → raw install → web. Drop any claim you cannot ground in at least one of these.
+
 ## Don't invent
 
 BO3 has its own vocabulary. Cross-game intuitions (other CoD titles, generic engine/Unity/Unreal terms) are usually wrong here. If neither t7kb nor the raw install supports a function, KVP, or concept, do not assert it exists.

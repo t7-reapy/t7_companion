@@ -19,7 +19,17 @@ flowchart LR
 > [!NOTE]
 > The **skills** ship as a **Claude Code plugin** (auto-loaded there). On other agents they aren't delivered automatically — paste the same guidance into your project: see [`templates/AGENTS.md`](templates/AGENTS.md) and [docs/clients.md](docs/clients.md). The `t7kb` / MCP loop below it is universal.
 
-## 📥 Install
+## 📥 Install & connect
+
+**Claude Code** — install the plugin; it downloads `t7kb` + the database and registers the MCP server for you, no manual install step needed:
+
+```
+/plugin marketplace add t7-reapy/t7_companion
+/plugin install t7kb@t7-reapy
+/t7kb:setup
+```
+
+**Any other MCP client** (Codex, OpenCode, Cursor, Copilot) — point your agent at this README and it can run the install itself (same `curl`/`irm` one-liner as above, just unattended), or run it yourself:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/t7-reapy/t7_companion/main/install/install.sh | bash
@@ -28,23 +38,10 @@ curl -fsSL https://raw.githubusercontent.com/t7-reapy/t7_companion/main/install/
 irm https://raw.githubusercontent.com/t7-reapy/t7_companion/main/install/install.ps1 | iex
 ```
 
+Then wire up `t7kb mcp` as a stdio server — see **[docs/clients.md](docs/clients.md)** for copy-paste config per client and the workspace `AGENTS.md` drop-in.
+
 > [!NOTE]
-> Linux/macOS/WSL use the `curl` line; Windows PowerShell uses `irm`. One command downloads the binary + embedding model + database into one folder (`~/.t7kb`, or `%LOCALAPPDATA%\t7kb`) and prints the binary path. The ~3.5 GB database unpacks itself the first time the server runs.
-
-> [!TIP]
-> Prefer to do it by hand? Download the release archive + `t7kb.db.zip`, extract them into one folder — done.
-
-## 🔌 Connect your agent
-
-**Claude Code** — install the plugin; it runs the install + MCP registration for you:
-
-```
-/plugin marketplace add t7-reapy/t7_companion
-/plugin install t7kb@t7-reapy
-/t7kb:setup
-```
-
-Any other MCP client (Codex, OpenCode, Cursor, Copilot — or Claude Code manually) runs `t7kb mcp` as a stdio server. See **[docs/clients.md](docs/clients.md)** for copy-paste config per client and the workspace `AGENTS.md` drop-in.
+> Both installers are idempotent (skip the ~0.9 GB DB download if already installed; `-Force`/`--force` to reinstall) and download the binary + embedding model + database into one folder (`~/.t7kb`, or `%LOCALAPPDATA%\t7kb`), unpacking the ~3.5 GB DB on first run. Prefer to do it by hand? Download the release archive + `t7kb.db.zip` and extract them into one folder instead.
 
 ## ⌨️ CLI
 

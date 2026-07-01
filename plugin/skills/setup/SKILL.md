@@ -9,19 +9,19 @@ One-time setup: download the t7kb tool + database, then register it as an MCP se
 
 ## 1. Run the installer
 
-Detect the OS and run the matching command. It downloads the binary, the embedding model, and the ~0.9 GB database archive into one folder, and prints the install path.
+Detect the OS and run the matching command. It downloads the binary, the embedding model, and the ~0.9 GB database archive into one folder, and prints the install path. Both installers are idempotent: if a binary + database are already present at the target path, they skip the download instead of re-fetching ~0.9 GB — so it's safe to run this even if the user already installed manually or in a prior session. Only pass the force flag below if the user explicitly wants to reinstall/update.
 
 - **Linux / macOS / WSL:**
   ```bash
   curl -fsSL https://raw.githubusercontent.com/t7-reapy/t7_companion/main/install/install.sh | bash
   ```
-  Installs to `~/.t7kb`; binary at `~/.t7kb/t7kb`.
+  Installs to `~/.t7kb`; binary at `~/.t7kb/t7kb`. Add `--force` (piped: `... | bash -s -- --force`) to reinstall/update.
 
 - **Windows (PowerShell):**
   ```powershell
   irm https://raw.githubusercontent.com/t7-reapy/t7_companion/main/install/install.ps1 | iex
   ```
-  Installs to `%LOCALAPPDATA%\t7kb`; binary at `%LOCALAPPDATA%\t7kb\t7kb.exe`.
+  Installs to `%LOCALAPPDATA%\t7kb`; binary at `%LOCALAPPDATA%\t7kb\t7kb.exe`. Add `-Force` (run the script directly, not piped, to pass args) to reinstall/update.
 
 ## 2. Register the MCP server
 
@@ -33,7 +33,41 @@ claude mcp add t7kb -- /absolute/path/to/t7kb mcp
 
 Example paths: `~/.t7kb/t7kb` (Linux/macOS, expand `~` to the real home) or `C:\Users\<you>\AppData\Local\t7kb\t7kb.exe` (Windows).
 
-## 3. Confirm
+## 3. Offer the workspace primer
+
+Walk up from the current directory to find the **BO3 mod-tools root** — the folder containing `raw/`, `share_raw/`, `usermaps/`, or `mods/` as siblings (a map/mod project usually lives *inside* that tree, e.g. `usermaps/<name>/`, not at the root itself). That root is also where Treyarch's shipped files live, so it's the same tree the "verify against ground truth" guidance in `bo3-knowledge` points at.
+
+If you find that root and it has no `AGENTS.md` yet, offer to drop the vendor-neutral primer there. Fetch it rather than hand-copy — it's not bundled with the plugin, and this is the single source of truth:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/t7-reapy/t7_companion/main/templates/AGENTS.md -o "<root>/AGENTS.md"
+```
+```powershell
+irm https://raw.githubusercontent.com/t7-reapy/t7_companion/main/templates/AGENTS.md -OutFile "<root>\AGENTS.md"
+```
+
+You just walked up to `<root>` *because* it's the raw mod-tools install — the same ground truth `bo3-knowledge`'s "verify against ground truth" section tells the agent to search for on every question. Save that discovery so nobody has to repeat it: append a short, project-specific section to the fetched `AGENTS.md` (this is appending a fact after the canonical fetch, not hand-copying the primer itself, so it doesn't fight the single-source-of-truth rule):
+
+```markdown
+
+## This install
+
+- Raw mod-tools root: `<root>` (this file's directory) — already confirmed present, no need to search for it again.
+```
+
+Do this whether `AGENTS.md` was just fetched or already existed — if it already existed but is missing this section, append it (check first so you don't duplicate the section on a re-run).
+
+Claude Code reads `CLAUDE.md`, not `AGENTS.md` — but it walks the directory tree the same way (any `CLAUDE.md` from the root down to wherever a session is launched gets loaded). So if there's no `CLAUDE.md` at that root either, also create a one-line one that imports the file instead of duplicating it:
+
+```
+@AGENTS.md
+```
+
+Dropping both once at the BO3 root means every session opened anywhere under it — the whole install, or a specific `usermaps/<map>`/`mods/<mod>` subfolder — picks the guidance (and the recorded raw-install path) up automatically. A per-map/mod `AGENTS.md`/`CLAUDE.md` still works on top for that project's own conventions: both Claude Code and AGENTS.md-aware tools accumulate ancestor files rather than let a closer one replace them.
+
+If `CLAUDE.md` already exists at the root, don't overwrite it — offer to add the `@AGENTS.md` import line to it instead (with confirmation), or just tell the user they can add it themselves. Skip the primer/path-recording entirely if no BO3-root markers are found — don't write these into unrelated repos.
+
+## 4. Confirm
 
 Tell the user setup is done and that the `t7kb` MCP tools (`search`, `get`) become available in the **next session** (or after `/reload-plugins`). The 3.5 GB database unpacks itself automatically the first time the server runs.
 

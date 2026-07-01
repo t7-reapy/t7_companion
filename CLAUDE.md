@@ -17,12 +17,14 @@ The repo is three things in one: the **Go tool**, a **Claude Code plugin**, and 
 - `.claude-plugin/marketplace.json` — the **marketplace** catalog (what makes `/plugin marketplace add t7-reapy/t7_companion` work). Lists the plugin below.
 - `plugin/.claude-plugin/plugin.json` — the **plugin** manifest itself. *Two different files on purpose:* marketplace = the catalog, plugin = the thing in it. Not a duplicate.
 - `plugin/skills/*/SKILL.md` — the plugin's skills. `setup` is the **agent's** install action (it runs `install/install.sh` + `claude mcp add`) — i.e. the agent-facing mirror of the README's install, not a separate install method.
-- `templates/AGENTS.md` — the vendor-neutral primer a user drops in their *map project*.
+- `templates/AGENTS.md` — the vendor-neutral primer a user drops at their **BO3 mod-tools root** (not per-map — ancestor-aware tools pick it up from any `usermaps/`/`mods/` subfolder underneath). `setup`'s step 3 offers to fetch it there, plus a `CLAUDE.md` that does `@AGENTS.md` for Claude Code.
 - `README.md` — the lean **human-facing** front door: install + a one-line connect pointer + CLI.
 - `docs/clients.md` — per-client MCP config (Codex/OpenCode/Cursor/Copilot/Claude) + the AGENTS.md editor table. The detail the README points at; lives only here.
 - `CLAUDE.md` (this file) / `NOTICE.md` / `docs/data-model.md` — contributor + licensing + schema docs.
 
 Install is intentionally described for two audiences — the README (human) and the `setup` skill (agent) — but both call the same `install/` scripts, so there is one real source.
+
+**Ground-truth discovery is closed-loop, not re-derived per session.** `bo3-knowledge`'s "verify against ground truth" section tells the agent to check the raw mod-tools install; `setup` step 3 already has to walk up to that same root to place `AGENTS.md`/`CLAUDE.md` (see above), so it appends a "Raw mod-tools root: `<path>`" fact to the fetched `AGENTS.md` there. `bo3-knowledge` checks that fact first before searching. If you touch either skill, keep this cross-reference intact — don't reintroduce a from-scratch search every session when `setup` already found the path once.
 
 ## Commands
 

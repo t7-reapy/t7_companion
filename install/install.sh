@@ -2,15 +2,24 @@
 # Universal installer for t7kb — the BO3-modding knowledge search tool.
 # Downloads the latest release (binary + embedding model) and the database into
 # one directory; any MCP-capable agent (Claude Code, Codex, OpenCode, Copilot,
-# Cursor) then points at "<dir>/t7kb mcp". Re-runnable.
+# Cursor) then points at "<dir>/t7kb mcp". Re-runnable, and skips the ~0.9 GB
+# download if already installed — pass --force to reinstall/update.
 #
 #   curl -fsSL https://raw.githubusercontent.com/t7-reapy/t7_companion/main/install/install.sh | bash
-#   ./install.sh [target-dir]      # default: ~/.t7kb
+#   ./install.sh [target-dir] [--force]      # default target: ~/.t7kb
 set -euo pipefail
 
 REPO="t7-reapy/t7_companion"
-TARGET="${1:-$HOME/.t7kb}"
 BASE="https://github.com/$REPO/releases/latest/download"
+
+FORCE=0
+TARGET="$HOME/.t7kb"
+for arg in "$@"; do
+  case "$arg" in
+    --force|-f) FORCE=1 ;;
+    *) TARGET="$arg" ;;
+  esac
+done
 
 case "$(uname -s)" in
   Linux) ARCHIVE="t7kb_linux_amd64.tar.gz" ;;
@@ -20,6 +29,12 @@ case "$(uname -s)" in
     exit 1 ;;
   *) echo "Unsupported OS '$(uname -s)'. On Windows, use install.ps1." >&2; exit 1 ;;
 esac
+
+if [ "$FORCE" -ne 1 ] && [ -x "$TARGET/t7kb" ] && { [ -f "$TARGET/t7kb.db" ] || [ -f "$TARGET/t7kb.db.zip" ]; }; then
+  echo "t7kb is already installed at $TARGET (binary: $TARGET/t7kb). Skipping download."
+  echo "Pass --force to reinstall/update."
+  exit 0
+fi
 
 have() { command -v "$1" >/dev/null 2>&1; }
 fetch() { # fetch <url> <out>

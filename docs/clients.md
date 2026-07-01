@@ -31,7 +31,17 @@ args = ["mcp"]
 
 ## Workspace guidance
 
-Drop [`templates/AGENTS.md`](../templates/AGENTS.md) at your map project root so the agent knows to use the knowledge base and how to query it well. Claude Code, Codex, OpenCode, and recent Cursor auto-read `AGENTS.md`; editors with their own rules file want its contents pasted in instead:
+Drop [`templates/AGENTS.md`](../templates/AGENTS.md) at your **BO3 mod-tools root** (the folder with `raw/`, `share_raw/`, `usermaps/`, `mods/` — not a specific map/mod folder) so the agent knows to use the knowledge base and how to query it well. AGENTS.md-aware tools (Codex, OpenCode, recent Cursor) load ancestor files, so one copy at the root covers every map/mod underneath; add a second, project-specific `AGENTS.md` inside a `usermaps/<map>` or `mods/<mod>` folder for that project's own conventions — it layers on top rather than replacing the root one.
+
+Claude Code reads `CLAUDE.md`, not `AGENTS.md` — but the plugin's skills already cover this guidance without any file needed. If you also want it version-controlled or shared with a team that uses other tools, drop a one-line `CLAUDE.md` next to `AGENTS.md` at the same root:
+
+```
+@AGENTS.md
+```
+
+Claude Code walks the directory tree the same way, loading any `CLAUDE.md` from that root down to wherever a session starts. `/t7kb:setup` offers to set both files up automatically the first time it runs in a BO3 root that doesn't have them yet.
+
+Editors with their own rules file want the `AGENTS.md` contents pasted in instead:
 
 | Editor | Instruction file |
 |---|---|

@@ -9,6 +9,8 @@ You have a local knowledge base of the Black Ops 3 modding community via the **t
 
 _If the `t7kb` tools aren't available, the knowledge base isn't installed — run `/t7kb:setup` first._
 
+_If you're working under a BO3 mod-tools root (has `raw/`, `share_raw/`, `usermaps/`, or `mods/`) and there's no `AGENTS.md`/`CLAUDE.md` at that root yet, offer to drop one in (`/t7kb:setup` step 3 fetches the primer and, for Claude Code, a `CLAUDE.md` that imports it) — one file at the root covers every map/mod under it, and a per-map/mod file still layers on top for that project's own conventions._
+
 ## Query it well
 
 - **Search broad, then narrow.** Issue several short, differently-phrased `search` queries (symptom-side, mechanism-side, exact-jargon-side). The full-text index is conjunctive, so a single phrasing misses the long tail.
@@ -19,6 +21,16 @@ _If the `t7kb` tools aren't available, the knowledge base isn't installed — ru
 ## Verify shipped tokens against ground truth
 
 The corpus is a starting point, not the final authority. For anything Treyarch **shipped** — exact function names, entity KVPs, asset fields, error strings, file paths — confirm against the raw mod-tools install (the game's own files under the BO3 root) before stating it as fact. Decompiled and community sources can be paraphrased or subtly wrong; the shipped files are ground truth. Drop any claim you can't ground.
+
+Check the project's `AGENTS.md`/`CLAUDE.md` first for a "Raw mod-tools root" fact (`/t7kb:setup` records it there when found) — if it's there, use that path directly instead of searching for the install.
+
+### When the raw install isn't available
+
+The raw mod-tools install is the preferred ground truth, but it may be absent (not installed, on another machine, or a headless run). Do not silently fall back to low-reliability sources:
+
+- **Detect and disclose.** If you cannot locate the install, say so in your answer, and mark any shipped-token claim (function name, KVP, asset field, error string, path) as corroborated by community sources only — not verified against shipped files.
+- **Last-resort web supplement.** When the kb is thin and the install is unavailable, a targeted web search may fill gaps. Rank it strictly below the kb and the install, never as ground truth. Prefer higher-reliability sources (e.g. UGX, resolved/accepted threads) over random posts, keep the "may be paraphrased or subtly wrong" caution, and state in the answer what was verified versus merely corroborated.
+- **Ordering.** Always: kb → raw install → web. Drop any claim you cannot ground in at least one of these.
 
 ## Don't invent
 
