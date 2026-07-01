@@ -9,7 +9,7 @@ The go-to companion for working with AI agents on **Black Ops 3 modding** — it
 
 ```mermaid
 flowchart LR
-    S["T7 skills · plugin<br/>scripting · debugging · knowledge"] -. guide .-> A
+    S["T7 skills · plugin<br/>grounded BO3 modding skills"] -. guide .-> A
     A([AI agent]) -- query --> B["t7kb · MCP server"]
     B -- "BM25 + vector" --> C[("t7kb.db")]
     C -- hits --> B
