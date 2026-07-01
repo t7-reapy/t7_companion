@@ -19,6 +19,8 @@ flowchart LR
 > [!NOTE]
 > The **skills** ship as a **Claude Code plugin** (auto-loaded there). On other agents they aren't delivered automatically — paste the same guidance into your project: see [`templates/AGENTS.md`](templates/AGENTS.md) and [docs/clients.md](docs/clients.md). The `t7kb` / MCP loop below it is universal.
 
+![t7 companion demo](docs/media/demo.gif)
+
 ## 📥 Install & connect
 
 **Claude Code** — install the plugin; it downloads `t7kb` + the database and registers the MCP server for you, no manual install step needed:
@@ -27,7 +29,11 @@ flowchart LR
 /plugin marketplace add t7-reapy/t7_companion
 /plugin install t7kb@t7-reapy
 /t7kb:setup
+/reload-plugins
 ```
+
+> [!NOTE]
+> `/reload-plugins` (or starting a new session) is what makes the registered MCP server actually connect — `/t7kb:setup` registers it, but the current session doesn't pick it up on its own.
 
 **Any other MCP client** (Codex, OpenCode, Cursor, Copilot) — point your agent at this README and it can run the install itself (same `curl`/`irm` one-liner as above, just unattended), or run it yourself:
 
