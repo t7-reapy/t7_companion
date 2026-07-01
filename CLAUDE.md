@@ -43,6 +43,7 @@ Run surfaces:
 - `t7kb search "<query>"` / `t7kb get <doc_id>` — one-shot CLI (`--scores` shows RRF + reliability)
 - `t7kb` (no args) — interactive browse: query → numbered hits → type a number to read one
 - `--version` reports the build version (injected via ldflags; "dev" locally)
+- `t7kb update-check` — on-demand-only GitHub release check (`internal/cli/update.go`); never runs automatically, never downloads anything itself. Compares the ldflags version against `/releases/latest`'s tag by plain string equality (no semver ordering needed — GitHub's "latest" is by definition newer than whatever's running). Wired into the `setup` skill's idempotency check, step 1.
 - DB resolution (`resolveDB`): `--db` > `$T7KB_DB` > beside the binary > `./t7kb.db`. It returns the intended path even if the file is absent — `ensureDB` (`internal/cli/db.go`) then unpacks a sibling `t7kb.db.zip` there on first run.
 
 ## Architecture
@@ -66,9 +67,11 @@ Pushing a `v*` tag runs GoReleaser (`.goreleaser.yaml` + `.github/workflows/rele
 - The auto-changelog is **disabled** on purpose — GoReleaser's git changelog leaks full SHAs + author emails. Release notes are the curated `header` / `footer` in `.goreleaser.yaml`; edit those, not a changelog config.
 - `t7kb.db.zip` is **not** built by CI — attach it to the release manually (`gh release upload <tag> t7kb.db.zip`), since it's large and built upstream.
 - Validate config changes with `goreleaser check`; dry-run with `goreleaser release --snapshot --clean`.
+- **`plugin/.claude-plugin/plugin.json`'s `version` must match the tag before you push it.** `.github/workflows/release.yml` gates on this (fails the job if they differ) so the Go release and the Claude Code plugin version can never drift apart — `t7kb update-check` relies on that invariant to tell a user an "update available" also means a matching plugin/skills update exists. Bump the manifest version in the same commit/PR as the release-worthy change, before tagging. A local `pre-push` hook (see Conventions) catches the mismatch earlier, but CI is the real enforcement.
 
 ## Conventions
 
 - Conventional commits (`feat:`, `fix:`, `refactor:`, `chore:`, scopes like `feat(cli):`) — they drive the version bump intent even though the changelog body is curated.
 - `*.db`, `*.db.zip`, and `models/` are build/ship artifacts — gitignored.
 - Never hard-wrap markdown at 80 columns (or any fixed width). One line per paragraph / list item; let the editor soft-wrap. The maintainer is allergic to fixed-width reflow.
+- Run `git config core.hooksPath .githooks` once per clone to enable the local `pre-push` hook (checks the same `plugin.json`-version-matches-tag invariant as the release CI gate, before you push a tag). Not automatic — a fresh clone won't have it until you run this.

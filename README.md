@@ -50,10 +50,11 @@ t7kb
 t7kb search <query>...
 t7kb get <doc_id>
 t7kb mcp
+t7kb update-check
 ```
 
 > [!NOTE]
-> Bare `t7kb` opens an **interactive browse** (type a query → pick a numbered hit → read its body). `search` is hybrid keyword + semantic — `--bm25` keyword-only, `-n N` result count, `--scores` to show RRF + reliability. `get <doc_id>` prints a full document. `mcp` runs the stdio server. `--db PATH` overrides the database (default: `$T7KB_DB`, then beside the binary, then `./t7kb.db`).
+> Bare `t7kb` opens an **interactive browse** (type a query → pick a numbered hit → read its body). `search` is hybrid keyword + semantic — `--bm25` keyword-only, `-n N` result count, `--scores` to show RRF + reliability. `get <doc_id>` prints a full document. `mcp` runs the stdio server. `--db PATH` overrides the database (default: `$T7KB_DB`, then beside the binary, then `./t7kb.db`). `update-check` reports whether a newer release exists — it's on-demand only (no background checks anywhere) and never downloads anything itself; re-run the installer with `-Force`/`--force` to actually update.
 
 ## 📄 License
 

@@ -9,7 +9,15 @@ One-time setup: download the t7kb tool + database, then register it as an MCP se
 
 ## 1. Run the installer
 
-Detect the OS and run the matching command. It downloads the binary, the embedding model, and the ~0.9 GB database archive into one folder, and prints the install path. Both installers are idempotent: if a binary + database are already present at the target path, they skip the download instead of re-fetching ~0.9 GB — so it's safe to run this even if the user already installed manually or in a prior session. Only pass the force flag below if the user explicitly wants to reinstall/update.
+Detect the OS and run the matching command. It downloads the binary, the embedding model, and the ~0.9 GB database archive into one folder, and prints the install path. Both installers are idempotent: if a binary + database are already present at the target path, they skip the download instead of re-fetching ~0.9 GB — so it's safe to run this even if the user already installed manually or in a prior session.
+
+If a binary already exists at the target path (the case the idempotency check would otherwise just skip), run `<path>/t7kb update-check` (`.exe` on Windows) first — it's a lightweight, on-demand-only network check (no automatic/background calls anywhere else in `t7kb`), and reports one of three things:
+
+- **Up to date** — proceed to skip the install as usual.
+- **Update available** — tell the user, and offer to re-run with `-Force`/`--force` below. Also say that this only refreshes the binary + database: the release also moves the plugin manifest version in lockstep (enforced at release time), so a matching Claude Code plugin/skills update exists too, but getting it is a separate step through Claude Code's own plugin update flow — mention it, don't attempt to check or trigger it yourself.
+- **Check failed** (e.g. offline) — don't block setup on it; fall back to skipping the install as before, with a one-line note that the check itself couldn't run.
+
+Only pass the force flag below if the user explicitly wants to reinstall/update.
 
 - **Linux / macOS / WSL:**
   ```bash

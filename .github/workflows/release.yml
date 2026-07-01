@@ -18,6 +18,15 @@ jobs:
         with:
           fetch-depth: 0 # full history so the changelog can diff tags
 
+      - name: Verify plugin manifest version matches the release tag
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          manifest="$(jq -r .version plugin/.claude-plugin/plugin.json)"
+          if [ "$tag" != "$manifest" ]; then
+            echo "::error::plugin.json version ($manifest) does not match release tag ($tag). Bump plugin/.claude-plugin/plugin.json's version to $tag before tagging." >&2
+            exit 1
+          fi
+
       - uses: actions/setup-go@v5
         with:
           go-version: stable
