@@ -28,12 +28,12 @@ flowchart LR
 ```
 /plugin marketplace add t7-reapy/t7_companion
 /plugin install t7kb@t7-reapy
-/t7kb:setup
 /reload-plugins
+/t7kb:setup
 ```
 
 > [!NOTE]
-> `/reload-plugins` (or starting a new session) is what makes the registered MCP server actually connect — `/t7kb:setup` registers it, but the current session doesn't pick it up on its own.
+> `/reload-plugins` (or starting a new session) is what makes the current session pick up the plugin's skills — `/t7kb:setup` is itself one of them, so it isn't available to run until after the reload.
 
 **Any other MCP client** (Codex, OpenCode, Cursor, Copilot) — point your agent at this README and it can run the install itself (same `curl`/`irm` one-liner as above, just unattended), or run it yourself:
 
